@@ -444,19 +444,20 @@
       }
 
       .top-nav .nav-tab.active {
-        background-color: #4caf50;
-        border-color: #4caf50;
-        color: white;
+        background-color: white;
+        color: #333;
         cursor: default;
       }
 
       .top-nav .nav-tab.inactive {
-        background-color: white;
-        color: #333;
+        background-color: #4caf50;
+        border-color: #4caf50;
+        color: white;
       }
 
       .top-nav .nav-tab.inactive:hover {
-        background-color: #f7fff7;
+        background-color: #45a049;
+        border-color: #45a049;
       }
 
       .top-nav .nav-tab.about-tab {
@@ -936,23 +937,46 @@
         text-align: left;
         margin: 0 0 8px 0;
       }
+      .top-right-logo {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        width: clamp(90px, 14vw, 180px);
+        height: auto;
+        z-index: 100;
+      }
+
+      @media (max-width: 900px) {
+        .top-right-logo {
+          top: 10px;
+          right: 15px;
+          width: 100px;
+        }
+      }
     </style>
   </head>
   <body>
+    <img
+      src="{{ url_for('static', filename='images/logo.png') }}"
+      class="top-right-logo"
+      alt="Logo"
+    />
     <header class="top-header">
       <nav class="top-nav" aria-label="Page navigation">
         <button type="button" class="nav-tab inactive" onclick="goBack()">
           Spin Page
         </button>
         <button type="button" class="nav-tab active" aria-current="page">
-          Chat Page
+          ✔ Chat Page
         </button>
         <button type="button" class="nav-tab about-tab" onclick="goToAbout()">
           About
         </button>
       </nav>
 
-      <h1 class="page-title">Chat with AI</h1>
+      <h1 class="page-title">
+        Different Every Time: What Probability Does to a Whole Response
+      </h1>
     </header>
     <div class="container">
       <div id="paramContainer">
