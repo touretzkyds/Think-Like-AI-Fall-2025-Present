@@ -16,6 +16,7 @@ models = {
 }
 print("Transformer models loaded.")
 
+
 @app.route("/auto_login")
 def auto_login():
     """
