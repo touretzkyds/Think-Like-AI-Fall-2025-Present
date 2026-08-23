@@ -1,4 +1,4 @@
-![LLM-Probability.org Banner](./static/images/logo.png)
+![LLM-Probability.org Banner](./static/images/logo2.png)
 
 An interactive educational web application that makes the probabilistic nature of Large Language Models (LLMs) transparent and accessible, designed for middle school students and educators (non-experts without coding experience).
 
