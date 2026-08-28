@@ -1086,6 +1086,36 @@
       .attention-grabber {
         animation: pulse-attention 1.5s infinite;
       }
+
+      /* Keep the action buttons centered and let them wrap when space gets tight */
+      .predict-button-container {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+
+      .predict-button-container button {
+        margin-top: 0 !important;
+        padding: 10px 14px !important;
+        font-size: 15px !important;
+        white-space: nowrap !important;
+        flex: 0 1 auto !important;
+        max-width: 100% !important;
+      }
+
+      @media screen and (max-width: 700px) {
+        .predict-button-container button {
+          flex: 0 1 auto !important;
+        }
+      }
+
+      @media screen and (max-width: 520px) {
+        .predict-button-container button {
+          flex: 1 1 100% !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1143,6 +1173,9 @@
           <div class="predict-button-container">
             <button type="submit" id="predictButton">
               Predict the Next Word
+            </button>
+            <button type="button" id="clearSpinsButton" onclick="clearSpins()">
+              Clear Spins
             </button>
             <button type="button" id="clearButton" onclick="clearText()">
               Clear Text
@@ -1243,6 +1276,7 @@
       let originalTokens = [];
       let originalProbabilities = [];
       let inputSource = "typed";
+      let textBeforeSpins = null;
       let pieChartInstance = null;
 
       localStorage.setItem("user_id", "{{ user_id }}");
@@ -1271,6 +1305,7 @@
         .getElementById("userTextInput")
         .addEventListener("input", function () {
           inputSource = "typed";
+          textBeforeSpins = null;
           document.getElementById("input_source").value = "typed";
           resetPredictionUI();
         });
@@ -1708,6 +1743,9 @@
 
           if (selectedWord) {
             let textBox = document.getElementById("userTextInput");
+            if (textBeforeSpins === null) {
+              textBeforeSpins = textBox.value;
+            }
             textBox.value += selectedWord;
             document.getElementById("input_source").value = "auto-selected";
             await triggerPrediction();
@@ -1743,9 +1781,19 @@
         document.getElementById("aiButton").style.visibility = "hidden";
       }
 
+      function clearSpins() {
+        if (textBeforeSpins === null) return;
+
+        document.getElementById("userTextInput").value = textBeforeSpins;
+        document.getElementById("input_source").value = "typed";
+        textBeforeSpins = null;
+        resetPredictionUI();
+      }
+
       function clearText() {
         document.getElementById("userTextInput").value = "";
         document.getElementById("input_source").value = "typed";
+        textBeforeSpins = null;
         resetPredictionUI();
       }
 
@@ -1759,17 +1807,13 @@
 
       document.addEventListener("DOMContentLoaded", function () {
         const predictBtn = document.getElementById("predictButton");
-        if (!localStorage.getItem("predictAnimationClicked")) {
-          if (predictBtn) {
-            predictBtn.classList.add("attention-grabber");
-          }
-        }
 
         if (predictBtn) {
+          // Jiggle each time the Spin page loads until the user clicks Predict.
+          predictBtn.classList.add("attention-grabber");
+
           predictBtn.addEventListener("click", function () {
             predictBtn.classList.remove("attention-grabber");
-            // Remember that they clicked it so it never plays again
-            localStorage.setItem("predictAnimationClicked", "true");
           });
         }
       });
