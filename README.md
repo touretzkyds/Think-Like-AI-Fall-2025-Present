@@ -1,7 +1,4 @@
 ![LLM-Probability.org Banner](./static/images/logo2.png)
-
-An interactive educational web application that makes the probabilistic nature of Large Language Models (LLMs) transparent and accessible, designed for middle school students and educators (non-experts without coding experience).
-
 An interactive educational web application that makes the probabilistic nature of Large Language Models (LLMs) transparent and accessible, designed for middle school students and educators (non-experts without coding experience). 
 
 ## Associated Curriculum
@@ -15,7 +12,7 @@ You can find the full curriculum, including slide decks, worksheets, and offline
 ## Publications
 If you use these materials in your teaching or research, please cite the relevant publication:
 
-1. Vahedian Movahed, S., & Touretzky, D. (In Press). From Spinners to Sampling Parameters: Revealing the Probabilistic Underpinnings of LLM Text Generation. *Proceedings of the SIGCSE Virtual 2026 Conference*. **[In Press]**
+1. Vahedian Movahed, S., & Touretzky, D. (November 2026). From Spinners to Sampling Parameters: Revealing the Probabilistic Underpinnings of LLM Text Generation. *Proceedings of the SIGCSE Virtual 2026 Conference*. **[In Press]**
 2. Vahedian Movahed, S., Quarles, J., & Touretzky, D. (2026, February). Exploring How LLMs Use Probability to Generate Text: Interactive Activities for Middle School Students. *Proceedings of the 57th ACM Technical Symposium on Computer Science Education V. 2* (pp. 1563–1564).
 3. Vahedian Movahed, S. (2026, February). Think Like AI: Hands-On Exploration of Sampling Parameters and Prompts for Middle School Students' Generative AI Literacy. *Proceedings of the 57th ACM Technical Symposium on Computer Science Education V. 1* (pp. 1082–1088).
 
