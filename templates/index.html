@@ -279,14 +279,24 @@
         margin-bottom: 40px;
         gap: 15px;
       }
-      #clearButton {
+      #clearButton,
+      #clearSpinsButton {
         background-color: black;
         color: white;
         border: 1px solid #333;
       }
-      #clearButton:hover {
+      #clearButton:hover,
+      #clearSpinsButton:hover:not(:disabled) {
         background-color: #333333;
         transform: scale(1.02);
+      }
+      #clearSpinsButton:disabled,
+      #clearSpinsButton:disabled:hover {
+        background-color: #cccccc;
+        color: white;
+        border-color: #cccccc;
+        transform: none;
+        cursor: not-allowed;
       }
       #logoutContainer {
         position: absolute;
@@ -1174,7 +1184,12 @@
             <button type="submit" id="predictButton">
               Predict the Next Word
             </button>
-            <button type="button" id="clearSpinsButton" onclick="clearSpins()">
+            <button
+              type="button"
+              id="clearSpinsButton"
+              onclick="clearSpins()"
+              disabled
+            >
               Clear Spins
             </button>
             <button type="button" id="clearButton" onclick="clearText()">
@@ -1306,6 +1321,7 @@
         .addEventListener("input", function () {
           inputSource = "typed";
           textBeforeSpins = null;
+          document.getElementById("clearSpinsButton").disabled = true;
           document.getElementById("input_source").value = "typed";
           resetPredictionUI();
         });
@@ -1747,6 +1763,7 @@
               textBeforeSpins = textBox.value;
             }
             textBox.value += selectedWord;
+            document.getElementById("clearSpinsButton").disabled = false;
             document.getElementById("input_source").value = "auto-selected";
             await triggerPrediction();
           } else {
@@ -1787,6 +1804,7 @@
         document.getElementById("userTextInput").value = textBeforeSpins;
         document.getElementById("input_source").value = "typed";
         textBeforeSpins = null;
+        document.getElementById("clearSpinsButton").disabled = true;
         resetPredictionUI();
       }
 
@@ -1794,6 +1812,7 @@
         document.getElementById("userTextInput").value = "";
         document.getElementById("input_source").value = "typed";
         textBeforeSpins = null;
+        document.getElementById("clearSpinsButton").disabled = true;
         resetPredictionUI();
       }
 
