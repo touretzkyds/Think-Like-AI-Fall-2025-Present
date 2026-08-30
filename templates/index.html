@@ -1311,8 +1311,9 @@
 
       function enablePredictButton() {
         const predictButton = document.getElementById("predictButton");
-        if (predictButton) {
-          predictButton.disabled = false;
+        const textBox = document.getElementById("userTextInput");
+        if (predictButton && textBox) {
+          predictButton.disabled = textBox.value.trim() === "";
         }
       }
 
@@ -1798,7 +1799,7 @@
         document.getElementById("aiButton").style.visibility = "hidden";
       }
 
-      function clearSpins() {
+      async function clearSpins() {
         if (textBeforeSpins === null) return;
 
         document.getElementById("userTextInput").value = textBeforeSpins;
@@ -1806,6 +1807,7 @@
         textBeforeSpins = null;
         document.getElementById("clearSpinsButton").disabled = true;
         resetPredictionUI();
+        await triggerPrediction();
       }
 
       function clearText() {
