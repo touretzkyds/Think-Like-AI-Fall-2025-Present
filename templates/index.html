@@ -199,6 +199,31 @@
         top: 0;
         left: 0;
       }
+      /* Optional explanation below the bar chart. Note: ~100% means very close to 100%, but not exactly 100%*/
+      .bar-chart-wrapper {
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+      }
+      .bar-chart-canvas {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+      }
+      .bar-chart-canvas > canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      #approxHundredNote {
+        margin: 4px 0 0;
+        padding: 0 4px;
+        font-size: 12px;
+        line-height: 1.3;
+        text-align: center;
+        color: #333;
+      }
       .left-parameter-box {
         width: 100%;
         max-width: 500px;
@@ -1253,7 +1278,6 @@
 
       <div id="chartContainer">
         <h2>Look at AI’s guesses</h2>
-
         <p
           id="aiOptionsNote"
           style="
@@ -1278,8 +1302,13 @@
           Spin to Choose
         </button>
         <div id="chartBox">
-          <div class="chart-wrapper">
-            <canvas id="resultChart"></canvas>
+          <div class="chart-wrapper bar-chart-wrapper">
+            <div class="bar-chart-canvas">
+              <canvas id="resultChart"></canvas>
+            </div>
+            <p id="approxHundredNote" hidden>
+              *Note: ~100% means very close to 100%, but not exactly 100%.
+            </p>
           </div>
           <div class="chart-wrapper">
             <canvas id="pieChart"></canvas>
@@ -1389,7 +1418,6 @@
           0.01,
         );
         const pValue = parseFloat(document.getElementById("pValue").value);
-        const targetP = pValue * 100;
 
         let validTokens = [];
         let validProbs = [];
@@ -1402,78 +1430,55 @@
         }
         if (validTokens.length === 0) return;
 
-        let tempProbs = validProbs.map((p) =>
-          Math.exp(Math.log(p + 1e-9) / temperature),
+        // Temperature changes probability heights, not which words are shown.
+        // Subtract the maximum before exponentiating for numerical stability.
+        const scaledLogs = validProbs.map(
+          (p) => Math.log(Math.max(p, Number.MIN_VALUE)) / temperature,
         );
-        let sumTempProbs = tempProbs.reduce((a, b) => a + b, 0);
-        let normalizedProbs = tempProbs.map((p) => p / sumTempProbs);
-
-        let exactPercentages = normalizedProbs.map((p) => p * 100);
-        let roundedPercentages = exactPercentages.map((p) => Math.floor(p));
-        let remainderDiff = Math.round(
-          100 - roundedPercentages.reduce((a, b) => a + b, 0),
+        const maxLog = Math.max(...scaledLogs);
+        const tempProbs = scaledLogs.map((logP) =>
+          Math.exp(Math.max(logP - maxLog, -700)),
         );
+        const sumTempProbs = tempProbs.reduce((a, b) => a + b, 0);
+        const normalizedProbs = tempProbs.map((p) => p / sumTempProbs);
 
-        let remainders = exactPercentages
-          .map((p, i) => ({ index: i, remainder: p - Math.floor(p) }))
-          .sort((a, b) => b.remainder - a.remainder);
-
-        for (let i = 0; i < remainderDiff; i++) {
-          if (i < remainders.length) {
-            roundedPercentages[remainders[i].index] += 1;
-          }
-        }
-
-        let combined = validTokens
+        // New top-P alone determines which words to show, using the original
+        // probabilities (Temperature = 1), so changing Temperature cannot
+        // change the number of bars or pie slices.
+        const sumOriginalProbs = validProbs.reduce((a, b) => a + b, 0);
+        const combined = validTokens
           .map((token, i) => ({
             token: token,
-            roundedProb: roundedPercentages[i],
-            exactProb: exactPercentages[i],
+            originalProb: validProbs[i] / sumOriginalProbs,
+            temperatureProb: normalizedProbs[i],
           }))
-          .sort((a, b) => b.roundedProb - a.roundedProb);
+          .sort((a, b) => b.originalProb - a.originalProb);
 
         let cumulativeProb = 0;
         const filteredCombined = [];
         for (const item of combined) {
           filteredCombined.push(item);
-          cumulativeProb += item.roundedProb;
-          if (cumulativeProb >= targetP) break;
+          cumulativeProb += item.originalProb;
+          if (pValue < 1 && cumulativeProb >= pValue) break;
         }
 
-        if (filteredCombined.length === 0 && combined.length > 0) {
-          filteredCombined.push(combined[0]);
-        }
-
+        // Normalize the surviving words using their temperature-adjusted
+        // probabilities, so the bar heights and pie slices sum to 100%
+        const filteredSum = filteredCombined.reduce(
+          (sum, item) => sum + item.temperatureProb,
+          0,
+        );
         const finalTokens = filteredCombined.map((item) => item.token);
-        const survivingRoundedProbs = filteredCombined.map(
-          (item) => item.roundedProb,
-        );
-        const survivingExactProbs = filteredCombined.map(
-          (item) => item.exactProb,
+        const finalDisplayData = filteredCombined.map(
+          (item) => (item.temperatureProb / filteredSum) * 100,
         );
 
-        const finalSum = survivingRoundedProbs.reduce((a, b) => a + b, 0);
-
-        let reNormExact = survivingRoundedProbs.map(
-          (p) => (p / finalSum) * 100,
+        // Show the note only when the ~100% label appears on a chart.
+        document.getElementById("approxHundredNote").hidden = !(
+          finalTokens.length > 1 && finalDisplayData.some((p) => p >= 99.5)
         );
 
-        let finalDisplayData = reNormExact.map((p) => Math.floor(p));
-        let finalDiff = Math.round(
-          100 - finalDisplayData.reduce((a, b) => a + b, 0),
-        );
-
-        let finalRemainders = reNormExact
-          .map((p, i) => ({ index: i, remainder: p - Math.floor(p) }))
-          .sort((a, b) => b.remainder - a.remainder);
-
-        for (let i = 0; i < finalDiff; i++) {
-          if (i < finalRemainders.length) {
-            finalDisplayData[finalRemainders[i].index] += 1;
-          }
-        }
-
-        renderChart(finalTokens, finalDisplayData, survivingExactProbs);
+        renderChart(finalTokens, finalDisplayData, finalDisplayData);
       }
 
       document
@@ -1544,10 +1549,18 @@
                     : context.parsed;
 
                 let formattedValue =
-                  displayValue % 1 === 0
-                    ? displayValue
-                    : displayValue.toFixed(1);
+                  displayValue > 0 && displayValue < 0.1
+                    ? "<0.1"
+                    : displayValue % 1 === 0
+                      ? displayValue
+                      : displayValue.toFixed(1);
 
+                if (
+                  displayValue >= 99.5 &&
+                  context.chart.data.labels.length > 1
+                ) {
+                  return "Probability: ~100%";
+                }
                 return "Probability: " + formattedValue + "%";
               },
             },
@@ -1593,6 +1606,8 @@
                     return 5;
                   },
                   formatter: function (value, context) {
+                    if (value >= 99.5 && context.chart.data.labels.length > 1)
+                      return "~100%";
                     if (value > 0 && value < 0.1) return "<0.1%";
                     if (value % 1 !== 0) return value.toFixed(1) + "%";
                     return value + "%";
@@ -1614,7 +1629,7 @@
                     font: { size: isNarrowScreen() ? 9 : 11 },
                   },
                 },
-                y: { beginAtZero: true, min: 0.1, max: 100 },
+                y: { beginAtZero: true, min: 0, max: 100 },
               },
               onClick: onChartClick,
               onHover: onChartHover,
@@ -1667,10 +1682,14 @@
                 tooltip: percentTooltip,
                 datalabels: {
                   color: "black",
-                  formatter: function (value) {
+                  formatter: function (value, context) {
                     const cutoff = isNarrowScreen() ? 8 : 5;
                     if (value >= cutoff) {
-                      return Math.round(value) + "%";
+                      if (value >= 99.5 && context.chart.data.labels.length > 1)
+                        return "~100%";
+                      if (value > 0 && value < 0.1) return "<0.1%";
+                      if (value % 1 !== 0) return value.toFixed(1) + "%";
+                      return value + "%";
                     } else {
                       return "";
                     }
@@ -1783,6 +1802,7 @@
       function resetPredictionUI() {
         originalTokens = [];
         originalProbabilities = [];
+        document.getElementById("approxHundredNote").hidden = true;
 
         if (window.barChart) {
           window.barChart.destroy();
