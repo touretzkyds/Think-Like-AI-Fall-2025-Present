@@ -1567,9 +1567,39 @@
             },
           };
 
+          // Place labels for bars above 90% just right of the bar, about
+          // five percentage points below its top (e.g., 100% -> 95%).
+          const highBarLabelPlugin = {
+            id: "highBarLabelPlugin",
+            afterDatasetsDraw: function (chart) {
+              const values = chart.data.datasets[0].data;
+              const bars = chart.getDatasetMeta(0).data;
+              const ctx = chart.ctx;
+              ctx.save();
+              ctx.fillStyle = "black";
+              ctx.font = `10px ${Chart.defaults.font.family}`;
+              ctx.textAlign = "left";
+              ctx.textBaseline = "middle";
+
+              values.forEach(function (value, index) {
+                if (value <= 90 || !bars[index]) return;
+                const label =
+                  value >= 99.5 && chart.data.labels.length > 1
+                    ? "~100%"
+                    : value % 1 !== 0
+                      ? value.toFixed(1) + "%"
+                      : value + "%";
+                const x = bars[index].x + bars[index].width / 2 + 5;
+                const y = chart.scales.y.getPixelForValue(value - 5);
+                ctx.fillText(label, x, y);
+              });
+              ctx.restore();
+            },
+          };
+
           window.barChart = new Chart(barCtx, {
             type: "bar",
-            plugins: [ChartDataLabels],
+            plugins: [ChartDataLabels, highBarLabelPlugin],
             data: {
               labels: finalLabels,
               datasets: [
@@ -1594,13 +1624,10 @@
                 tooltip: percentTooltip,
                 datalabels: {
                   color: "black",
-                  anchor: function (context) {
-                    let value = context.dataset.data[context.dataIndex];
-                    return value > 90 ? "center" : "end";
-                  },
+                  anchor: "end",
                   align: function (context) {
                     let value = context.dataset.data[context.dataIndex];
-                    return value > 90 ? "right" : "end";
+                    return value > 90 ? 15 : "end";
                   },
                   offset: function (context) {
                     let value = context.dataset.data[context.dataIndex];
@@ -1608,7 +1635,7 @@
                       const bar = context.chart.getDatasetMeta(
                         context.datasetIndex,
                       ).data[context.dataIndex];
-                      return bar.width / 2 + 5;
+                      return bar.width / 2;
                     }
                     let totalBars = context.chart.data.labels.length;
                     if (totalBars > 12) {
@@ -1624,6 +1651,9 @@
                     return value + "%";
                   },
                   display: function (context) {
+                    // Labels above 90% are positioned at their exact chart coordinates.
+                    if (context.dataset.data[context.dataIndex] > 90)
+                      return false;
                     // Hide crowded labels on very small screens
                     if (!isNarrowScreen()) return true;
                     return context.chart.data.labels.length <= 8;
